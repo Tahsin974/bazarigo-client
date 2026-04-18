@@ -9,6 +9,7 @@ import { Camera, Store, User } from "lucide-react";
 import useAuth from "../../../../Utils/Hooks/useAuth";
 import DatePicker from "react-datepicker";
 import { FileUploadField } from "../../../../components/ui/FileUploadField";
+import useAddress from "../../../../Utils/Hooks/useAddress";
 
 export default function SettingsView({ active }) {
   const axiosPublic = useAxiosPublic();
@@ -23,10 +24,18 @@ export default function SettingsView({ active }) {
   );
 
   const [gender, setGender] = useState(user.gender || "");
+  const [division, setDivision] = useState(user.division || "");
+  const [district, setDistrict] = useState(user.district || "");
+  const [thana, setThana] = useState(user.thana || "");
   const [date, setDate] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState(null);
+  const {
+      divisions, divisionsLoading,
+      districts, districtsLoading,
+      thanas,    thanasLoading,
+    } = useAddress(division, district);
 
   const baseUrl = import.meta.env.VITE_BASEURL;
   const categoryOptions = [
@@ -52,7 +61,16 @@ export default function SettingsView({ active }) {
 
     setStoreImg(file);
   };
+const handleDivisionChange = (e) => {
+    setDivision(e.target.value);
+    setDistrict("");   // cascade reset
+    setThana("");
+  };
 
+  const handleDistrictChange = (e) => {
+    setDistrict(e.target.value);
+    setThana("");      // cascade reset
+  };
   const formatDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -392,34 +410,76 @@ export default function SettingsView({ active }) {
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
                 />
 
-                <InputField
-                  label="District"
-                  placeholder="District"
-                  id="district"
-                  defaultValue={user.district}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
-                />
-                <InputField
-                  label="Thana"
-                  placeholder="Thana"
-                  id="thana"
-                  defaultValue={user.thana}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
-                />
-                <InputField
-                  label="Postal Code"
-                  placeholder="Postal Code"
-                  id="postal_code"
-                  type="number"
-                  defaultValue={user.postal_code}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-                      e.preventDefault(); // keyboard up/down disable
-                    }
-                  }}
-                  onWheel={(e) => e.target.blur()}
-                />
+                {/* Division */}
+                                    <div className="flex-1">
+                                      <label className="block text-sm font-medium mb-1">
+                                     Division
+                                      
+                                    </label>
+                                      <SelectField
+                        selectValue={division}
+                        selectValueChange={handleDivisionChange}
+                        isWide={true}
+                        required
+                      >
+                        <option value="" disabled>
+                          {divisionsLoading ? "Loading..." : "Select Division"}
+                        </option>
+                        {divisions.map((div) => (
+                          <option key={div} value={div}>{div}</option>
+                        ))}
+                      </SelectField>
+                                    </div>
+                                    {/* District */}
+                                    <div className="flex-1">
+                                      <label className="block text-sm font-medium mb-1">
+                                     District
+                                      
+                                    </label>
+                                     <SelectField
+                        selectValue={district}
+                        selectValueChange={handleDistrictChange}
+                        isWide={true}
+                        required
+                        disabled={!division || districtsLoading}
+                      >
+                        <option value="" disabled>
+                          {districtsLoading
+                            ? "Loading..."
+                            : !division
+                            ? "Select Division first"
+                            : "Select District"}
+                        </option>
+                        {districts.map((dist) => (
+                          <option key={dist} value={dist}>{dist}</option>
+                        ))}
+                      </SelectField>
+                                    </div>
+                                    {/* Thana */}
+                                    <div className="flex-1">
+                                      <label className="block text-sm font-medium mb-1">
+                                     Thana
+                                      
+                                    </label>
+                                      <SelectField
+                        selectValue={thana}
+                        selectValueChange={(e) => setThana(e.target.value)}
+                        isWide={true}
+                        required
+                        disabled={!district || thanasLoading}
+                      >
+                        <option value="" disabled>
+                          {thanasLoading
+                            ? "Loading..."
+                            : !district
+                            ? "Select District first"
+                            : "Select Thana"}
+                        </option>
+                        {thanas.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </SelectField>
+                                    </div>
                 <InputField
                   label="NID Number"
                   placeholder="NID Number"
@@ -472,10 +532,9 @@ export default function SettingsView({ active }) {
                             : mainProductCategory,
                         business_address:
                           document.getElementById("businessAddress").value,
-                        district: document.getElementById("district").value,
-                        thana: document.getElementById("thana").value,
-                        postal_code:
-                          document.getElementById("postal_code").value,
+                       division: division === "" ? user.division : division,
+                       district: district === "" ? user.district : district,
+                       thana: thana === "" ? user.thana : thana,
                         nid_number: document.getElementById("nidNumber").value,
                         trade_license_number:
                           document.getElementById("tradeLicenseNumber").value,

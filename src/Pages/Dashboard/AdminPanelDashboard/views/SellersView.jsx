@@ -97,6 +97,7 @@ function SellersView({
           });
           return refetch();
         } else {
+          console.log("Bulk delete response:", res.data);
           Swal.fire({
             icon: "error",
             title: "Oops! Try again",

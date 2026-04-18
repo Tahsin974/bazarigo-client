@@ -7,6 +7,7 @@ import useAuth from "../../../../../Utils/Hooks/useAuth";
 import useAxiosPublic from "../../../../../Utils/Hooks/useAxiosPublic";
 import Swal from "sweetalert2";
 import { Camera, Plus, User } from "lucide-react";
+import useAddress from "../../../../../Utils/Hooks/useAddress";
 
 export default function AccountSettings({ activeTab }) {
   const axiosPublic = useAxiosPublic();
@@ -15,11 +16,19 @@ export default function AccountSettings({ activeTab }) {
 
   const { user, refreshUser } = useAuth();
   const [gender, setGender] = useState(user.gender || "");
-  // const [provider, setProvider] = useState("");
+  const [division, setDivision] = useState(user.division || "");
+  const [district, setDistrict] = useState(user.district || "");
+  const [thana, setThana] = useState(user.thana || "");
+  
   const [date, setDate] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState(null);
+ const {
+    divisions, divisionsLoading,
+    districts, districtsLoading,
+    thanas,    thanasLoading,
+  } = useAddress(division, district);
 
   const [payments, setPayments] = useState(() => {
     const userPayment = user.payment_methods;
@@ -28,6 +37,8 @@ export default function AccountSettings({ activeTab }) {
     if (!userPayment || Object.keys(userPayment).length === 0) {
       return [{ provider: "", account: "", is_primary: false }];
     }
+    
+    
 
     // যদি array থাকে
     if (Array.isArray(userPayment)) {
@@ -41,7 +52,16 @@ export default function AccountSettings({ activeTab }) {
     // Default fallback
     return [{ provider: "", account: "", is_primary: false }];
   });
+const handleDivisionChange = (e) => {
+    setDivision(e.target.value);
+    setDistrict("");   // cascade reset
+    setThana("");
+  };
 
+  const handleDistrictChange = (e) => {
+    setDistrict(e.target.value);
+    setThana("");      // cascade reset
+  };
   // Add Payment Field
   const addPaymentField = () => {
     setPayments([
@@ -259,34 +279,76 @@ export default function AccountSettings({ activeTab }) {
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
                 />
 
-                <InputField
-                  label="District"
-                  placeholder="District"
-                  id="district"
-                  defaultValue={user.district}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
-                />
-                <InputField
-                  label="Thana"
-                  placeholder="Thana"
-                  id="thana"
-                  defaultValue={user.thana}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
-                />
-                <InputField
-                  label="Postal Code"
-                  placeholder="Postal Code"
-                  id="postal_code"
-                  type="number"
-                  defaultValue={user.postal_code}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF0055] focus:ring-2 focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white m-0"
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-                      e.preventDefault(); // keyboard up/down disable
-                    }
-                  }}
-                  onWheel={(e) => e.target.blur()}
-                />
+                {/* Division */}
+                                    <div className="flex-1">
+                                      <label className="block text-sm font-medium mb-1">
+                                     Division
+                                      <span className="text-red-500 ml-1">*</span>
+                                    </label>
+                                      <SelectField
+                        selectValue={division}
+                        selectValueChange={handleDivisionChange}
+                        isWide={true}
+                        required
+                      >
+                        <option value="" disabled>
+                          {divisionsLoading ? "Loading..." : "Select Division"}
+                        </option>
+                        {divisions.map((div) => (
+                          <option key={div} value={div}>{div}</option>
+                        ))}
+                      </SelectField>
+                                    </div>
+                                    {/* District */}
+                                    <div className="flex-1">
+                                      <label className="block text-sm font-medium mb-1">
+                                     District
+                                      <span className="text-red-500 ml-1">*</span>
+                                    </label>
+                                     <SelectField
+                        selectValue={district}
+                        selectValueChange={handleDistrictChange}
+                        isWide={true}
+                        required
+                        disabled={!division || districtsLoading}
+                      >
+                        <option value="" disabled>
+                          {districtsLoading
+                            ? "Loading..."
+                            : !division
+                            ? "Select Division first"
+                            : "Select District"}
+                        </option>
+                        {districts.map((dist) => (
+                          <option key={dist} value={dist}>{dist}</option>
+                        ))}
+                      </SelectField>
+                                    </div>
+                                    {/* Thana */}
+                                    <div className="flex-1">
+                                      <label className="block text-sm font-medium mb-1">
+                                     Thana
+                                      <span className="text-red-500 ml-1">*</span>
+                                    </label>
+                                      <SelectField
+                        selectValue={thana}
+                        selectValueChange={(e) => setThana(e.target.value)}
+                        isWide={true}
+                        required
+                        disabled={!district || thanasLoading}
+                      >
+                        <option value="" disabled>
+                          {thanasLoading
+                            ? "Loading..."
+                            : !district
+                            ? "Select District first"
+                            : "Select Thana"}
+                        </option>
+                        {thanas.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </SelectField>
+                                    </div>
                 <div className="sm:col-span-2 ms-auto">
                   <AddBtn
                     btnHandler={() =>
@@ -294,10 +356,9 @@ export default function AccountSettings({ activeTab }) {
                         full_name: document.getElementById("full_name").value,
                         phone: document.getElementById("phone_number").value,
                         address: document.getElementById("address").value,
-                        district: document.getElementById("district").value,
-                        thana: document.getElementById("thana").value,
-                        postal_code:
-                          document.getElementById("postal_code").value,
+                       division: division === "" ? user.division : division,
+                       district: district === "" ? user.district : district,
+                       thana: thana === "" ? user.thana : thana,
                         gender: gender === "" ? user.gender : gender,
                       })
                     }

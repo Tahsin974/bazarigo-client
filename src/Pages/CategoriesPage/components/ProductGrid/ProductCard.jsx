@@ -134,7 +134,7 @@ export default function ProductCard({ product: item, viewMode }) {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {/* list badges only */}
                 <div
                   className={`${viewMode === "list" ? "flex gap-2" : "hidden"}`}
@@ -167,7 +167,7 @@ export default function ProductCard({ product: item, viewMode }) {
                   <motion.span
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="bg-[#FF0055] text-white text-sm font-bold px-2 py-0.5 rounded-full"
+                    className="bg-[#FF0055] text-white text-sm font-bold px-2 py-0.5  rounded-full whitespace-nowrap"
                   >
                     {item.discount}% OFF
                   </motion.span>

@@ -9,6 +9,7 @@ import SelectField from "../../ui/SelectField";
 import { InputField } from "../../ui/InputField";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
+import useAddress from "../../../Utils/Hooks/useAddress";
 
 export default function AddMemberModal({ onClose, refetch }) {
   const permissionOptions = [
@@ -22,7 +23,27 @@ export default function AddMemberModal({ onClose, refetch }) {
   const axiosPublic = useAxiosPublic();
   const [profileImage, setProfileImage] = useState(null);
   const [gender, setGender] = useState("");
+  const [division, setDivision] = useState("");
+  const [district, setDistrict] = useState("");
+  const [thana, setThana] = useState("");
+
   const [date, setDate] = useState(null);
+  const {
+      divisions, divisionsLoading,
+      districts, districtsLoading,
+      thanas,    thanasLoading,
+    } = useAddress(division, district);
+  
+    const handleDivisionChange = (e) => {
+      setDivision(e.target.value);
+      setDistrict("");   // cascade reset
+      setThana("");
+    };
+  
+    const handleDistrictChange = (e) => {
+      setDistrict(e.target.value);
+      setThana("");      // cascade reset
+    };
   const defaultPermissions = permissionOptions.reduce((acc, perm) => {
     acc[perm] = false;
     return acc;
@@ -71,9 +92,9 @@ export default function AddMemberModal({ onClose, refetch }) {
       formData.append("gender", gender);
       formData.append("date_of_birth", date ? date.toISOString() : "");
       formData.append("address", data.address || "");
-      formData.append("district", data.district || "");
-      formData.append("thana", data.thana || "");
-      formData.append("postal_code", data.postal_code || "");
+      formData.append("division", division);
+      formData.append("district", district);
+      formData.append("thana", thana);
       formData.append("permissions", JSON.stringify(data.permissions || {}));
 
       const res = await axiosPublic.post("/admins", formData, {
@@ -245,64 +266,76 @@ export default function AddMemberModal({ onClose, refetch }) {
                     />
                   </div>
 
-                  <div className="flex-1">
-                    <InputField
-                      {...register("district", {
-                        required: "District is required",
-                        pattern: {
-                          value: /^[A-Za-z\s]{2,50}$/,
-                          message: "Enter a valid district name",
-                        },
-                      })}
-                      placeholder="District"
-                      label="District"
-                      className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                      errors={errors.district}
-                      errorsMessage={errors.district?.message}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <InputField
-                      {...register("thana", {
-                        required: "Thana is required",
-                        pattern: {
-                          value: /^[A-Za-z\s]{2,50}$/,
-                          message: "Enter a valid thana name",
-                        },
-                      })}
-                      placeholder="Thana"
-                      label="Thana"
-                      className={`w-full px-4 py-3 rounded-lg border 
-                         border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                      errors={errors.thana}
-                      errorsMessage={errors.thana?.message}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <InputField
-                      type="number"
-                      {...register("postal_code", {
-                        required: "Postal code is required",
-                        pattern: {
-                          value: /^\d{4,5}$/,
-                          message: "Postal code must be 4–5 digits",
-                        },
-                      })}
-                      placeholder="Postal Code"
-                      label="Postal Code"
-                      className={`w-full px-4 py-3 rounded-lg border 
-                          border-gray-300
-                         focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                      errors={errors.postal_code}
-                      errorsMessage={errors.postal_code?.message}
-                      onKeyDown={(e) => {
-                        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-                          e.preventDefault(); // keyboard up/down disable
-                        }
-                      }}
-                      onWheel={(e) => e.target.blur()}
-                    />
-                  </div>
+                   {/* Division */}
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-1">
+                                       Division
+                                        <span className="text-red-500 ml-1">*</span>
+                                      </label>
+                                        <SelectField
+                          selectValue={division}
+                          selectValueChange={handleDivisionChange}
+                          isWide={true}
+                          required
+                        >
+                          <option value="" disabled>
+                            {divisionsLoading ? "Loading..." : "Select Division"}
+                          </option>
+                          {divisions.map((div) => (
+                            <option key={div} value={div}>{div}</option>
+                          ))}
+                        </SelectField>
+                                      </div>
+                                      {/* District */}
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-1">
+                                       District
+                                        <span className="text-red-500 ml-1">*</span>
+                                      </label>
+                                       <SelectField
+                          selectValue={district}
+                          selectValueChange={handleDistrictChange}
+                          isWide={true}
+                          required
+                          disabled={!division || districtsLoading}
+                        >
+                          <option value="" disabled>
+                            {districtsLoading
+                              ? "Loading..."
+                              : !division
+                              ? "Select Division first"
+                              : "Select District"}
+                          </option>
+                          {districts.map((dist) => (
+                            <option key={dist} value={dist}>{dist}</option>
+                          ))}
+                        </SelectField>
+                                      </div>
+                                      {/* Thana */}
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-1">
+                                       Thana
+                                        <span className="text-red-500 ml-1">*</span>
+                                      </label>
+                                        <SelectField
+                          selectValue={thana}
+                          selectValueChange={(e) => setThana(e.target.value)}
+                          isWide={true}
+                          required
+                          disabled={!district || thanasLoading}
+                        >
+                          <option value="" disabled>
+                            {thanasLoading
+                              ? "Loading..."
+                              : !district
+                              ? "Select District first"
+                              : "Select Thana"}
+                          </option>
+                          {thanas.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </SelectField>
+                                      </div>
                 </div>
                 <div className="flex flex-col">
                   <label className="text-sm mb-1">Date Of Birth</label>

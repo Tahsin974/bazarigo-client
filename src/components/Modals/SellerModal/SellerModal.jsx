@@ -202,24 +202,27 @@ export default function SellerModal({ onClose, seller }) {
               <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl shadow-sm sm:col-span-2">
                 <MapPin className="text-[#FF0055]" size={20} />
                 <div>
-                  <p className="text-sm text-gray-500">Business Address</p>
-                  <p className="font-medium text-gray-800">
-                    {seller?.business_address ||
-                    seller.thana ||
-                    seller.district ||
-                    seller.postal_code
-                      ? `${seller.business_address || ""}${
-                          seller.business_address && seller.thana ? ", " : ""
-                        }${seller.thana || ""}${
-                          (seller.address || seller.thana) && seller.district
-                            ? ", "
-                            : ""
-                        }${seller.district || ""}${
-                          seller.postal_code ? " - " + seller.postal_code : ""
-                        }`
-                      : "Not Provided"}
-                  </p>
-                </div>
+  <p className="text-sm text-gray-500">Business Address</p>
+  <p className="font-medium text-gray-800">
+    {seller?.business_address ||
+    seller?.thana ||
+    seller?.district ||
+    seller?.division
+      ? `${seller.business_address || ""}${
+          seller.business_address && seller.thana ? ", " : ""
+        }${seller.thana || ""}${
+          (seller.business_address || seller.thana) && seller.district
+            ? ", "
+            : ""
+        }${seller.district || ""}${
+          (seller.business_address || seller.thana || seller.district) &&
+          seller.division
+            ? ", "
+            : ""
+        }${seller.division || ""}`
+      : "Not Provided"}
+  </p>
+</div>
               </div>
               <h4 className="font-semibold text-gray-800 my-3 sm:col-span-2 border-l-4 border-l-[#FF0055] pl-3">
                 Payment Information

@@ -25,7 +25,7 @@ export default function CustomerModal({ customer, onClose }) {
     address,
     district,
     thana,
-    postal_code,
+    division,
     date_of_birth,
     gender,
     payment_methods,
@@ -103,17 +103,19 @@ export default function CustomerModal({ customer, onClose }) {
             <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl shadow-sm">
               <MapPin className="text-[#FF0055]" size={20} />
               <div>
-                <p className="text-sm text-gray-500">Address</p>
-                <p className="font-medium text-gray-800">
-                  {address || thana || district || postal_code
-                    ? `${address || ""}${address && thana ? ", " : ""}${
-                        thana || ""
-                      }${(address || thana) && district ? ", " : ""}${
-                        district || ""
-                      }${postal_code ? " - " + postal_code : ""}`
-                    : "Not Provided"}
-                </p>
-              </div>
+  <p className="text-sm text-gray-500">Address</p>
+  <p className="font-medium text-gray-800">
+    {address || thana || district || division
+      ? `${address || ""}${address && thana ? ", " : ""}${
+          thana || ""
+        }${(address || thana) && district ? ", " : ""}${
+          district || ""
+        }${
+          (address || thana || district) && division ? ", " : ""
+        }${division || ""}`
+      : "Not Provided"}
+  </p>
+</div>
             </div>
             <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl shadow-sm">
               <Cake className="text-[#FF0055]" size={20} />

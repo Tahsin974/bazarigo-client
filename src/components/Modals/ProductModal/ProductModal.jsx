@@ -197,12 +197,12 @@ export default function ProductModal({ onClose, refetch }) {
 
   const onImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    const maxSizeImage = 2 * 1024 * 1024;
+
     const validFiles = [];
     let hasInvalid = false;
 
     files.forEach((file) => {
-      if (file.type.startsWith("image") && file.size > maxSizeImage) {
+      if (file.type.startsWith("image")) {
         hasInvalid = true;
       } else if (
         file.type.startsWith("image") ||
@@ -234,7 +234,7 @@ export default function ProductModal({ onClose, refetch }) {
 
   const onVariantImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    const maxSizeImage = 2 * 1024 * 1024; // 2MB
+
     const validFiles = [];
     let hasInvalidSize = false;
     let hasInvalidType = false;
@@ -242,11 +242,6 @@ export default function ProductModal({ onClose, refetch }) {
     files.forEach((file) => {
       if (!file.type.startsWith("image/")) {
         hasInvalidType = true;
-        return;
-      }
-
-      if (file.size > maxSizeImage) {
-        hasInvalidSize = true;
         return;
       }
 

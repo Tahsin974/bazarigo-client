@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { User, Eye, EyeOff, Camera } from "lucide-react";
+import { User,  Camera } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import useAxiosPublic from "../../../Utils/Hooks/useAxiosPublic";
@@ -15,6 +14,7 @@ import { useNavigate } from "react-router";
 import { InputField } from "../../../components/ui/InputField";
 import { useLocation } from "react-router";
 import Cookies from "js-cookie";
+import useAddress from "../../../Utils/Hooks/useAddress";
 
 export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
   const axiosPublic = useAxiosPublic();
@@ -37,6 +37,9 @@ export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
   const baseUrl = import.meta.env.VITE_BASEURL;
   const [image, setImage] = useState(null);
   const [gender, setGender] = useState("");
+  const [division, setDivision] = useState("");
+  const [district, setDistrict] = useState("");
+  const [thana, setThana] = useState("");
   const [date, setDate] = useState(null);
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -68,9 +71,9 @@ export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
         formData.append("date_of_birth", formatDate(date));
         formData.append("gender", gender);
         formData.append("address", data.address);
-        formData.append("district", data.district);
-        formData.append("thana", data.thana);
-        formData.append("postal_code", data.postal_code);
+        formData.append("division", division);
+        formData.append("district", district);
+        formData.append("thana", thana);
 
         // profile image File object হিসেবে append করা
         if (image) {
@@ -161,6 +164,24 @@ export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
       setLoading(false); // stop loading
     }
   };
+
+
+  const {
+    divisions, divisionsLoading,
+    districts, districtsLoading,
+    thanas,    thanasLoading,
+  } = useAddress(division, district);
+
+  const handleDivisionChange = (e) => {
+    setDivision(e.target.value);
+    setDistrict("");   // cascade reset
+    setThana("");
+  };
+
+  const handleDistrictChange = (e) => {
+    setDistrict(e.target.value);
+    setThana("");      // cascade reset
+  };
   useEffect(() => {
     const email = Cookies.get("rememberedEmail");
     const password = Cookies.get("rememberedPass");
@@ -175,7 +196,8 @@ export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
         shouldDirty: true,
       });
     }
-  }, [setValue]);
+  }, [setValue,type]);
+
 
   return (
     <section className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-r from-[#FF0055] to-[#FF7B7B] p-6">
@@ -423,6 +445,9 @@ export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
                     </SelectField>
                   </div>
                   <div className="grid md:grid-cols-3 gap-3">
+                    
+
+                    {/* Address */}
                     <div className="md:col-span-3">
                       <InputField
                         required
@@ -440,60 +465,78 @@ export default function AuthPanel({ type = "signup", onNavigate = () => {} }) {
                         errorsMessage={errors.address?.message}
                       />
                     </div>
-
+                    {/* Division */}
                     <div className="flex-1">
-                      <InputField
-                        required
-                        {...register("district", {
-                          required: "District is required",
-                          pattern: {
-                            value: /^[A-Za-z\s]{2,50}$/,
-                            message: "Enter a valid district name",
-                          },
-                        })}
-                        label="District"
-                        placeholder="Enter district name (e.g., Dhaka)"
-                        className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                        errors={errors.district}
-                        errorsMessage={errors.district?.message}
-                      />
+                      <label className="block text-sm font-medium mb-1">
+                     Division
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                      <SelectField
+        selectValue={division}
+        selectValueChange={handleDivisionChange}
+        isWide={true}
+        required
+      >
+        <option value="" disabled>
+          {divisionsLoading ? "Loading..." : "Select Division"}
+        </option>
+        {divisions.map((div) => (
+          <option key={div} value={div}>{div}</option>
+        ))}
+      </SelectField>
                     </div>
+                    {/* District */}
                     <div className="flex-1">
-                      <InputField
-                        required
-                        {...register("thana", {
-                          required: "Thana is required",
-                          pattern: {
-                            value: /^[A-Za-z\s]{2,50}$/,
-                            message: "Enter a valid thana name",
-                          },
-                        })}
-                        label="Thana"
-                        placeholder="Enter thana or upazila (e.g., Mirpur)"
-                        className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                        errors={errors.thana}
-                        errorsMessage={errors.thana?.message}
-                      />
+                      <label className="block text-sm font-medium mb-1">
+                     District
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                     <SelectField
+        selectValue={district}
+        selectValueChange={handleDistrictChange}
+        isWide={true}
+        required
+        disabled={!division || districtsLoading}
+      >
+        <option value="" disabled>
+          {districtsLoading
+            ? "Loading..."
+            : !division
+            ? "Select Division first"
+            : "Select District"}
+        </option>
+        {districts.map((dist) => (
+          <option key={dist} value={dist}>{dist}</option>
+        ))}
+      </SelectField>
                     </div>
+                    {/* Thana */}
                     <div className="flex-1">
-                      <InputField
-                        required
-                        type="number"
-                        {...register("postal_code", {
-                          required: "Postal code is required",
-                          pattern: {
-                            value: /^\d{4,5}$/,
-                            message: "Postal code must be 4–5 digits",
-                          },
-                        })}
-                        label="Postal Code"
-                        placeholder="Enter postal code (e.g., 1216)"
-                        className={`w-full px-4 py-3 rounded-lg border border-gray-300
-                         focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                        errors={errors.postal_code}
-                        errorsMessage={errors.postal_code?.message}
-                      />
+                      <label className="block text-sm font-medium mb-1">
+                     Thana
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                      <SelectField
+        selectValue={thana}
+        selectValueChange={(e) => setThana(e.target.value)}
+        isWide={true}
+        required
+        disabled={!district || thanasLoading}
+      >
+        <option value="" disabled>
+          {thanasLoading
+            ? "Loading..."
+            : !district
+            ? "Select District first"
+            : "Select Thana"}
+        </option>
+        {thanas.map((t) => (
+          <option key={t} value={t}>{t}</option>
+        ))}
+      </SelectField>
                     </div>
+                    
+                    
                   </div>
                 </>
               )}

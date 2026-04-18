@@ -26,6 +26,9 @@ export default function SellerRegistrationForm({
   const [nidBackImg, setNidBackImg] = useState(null);
   const [date, setDate] = useState(null);
   const [gender, setGender] = useState("");
+   const [division, setDivision] = useState("");
+    const [district, setDistrict] = useState("");
+    const [thana, setThana] = useState("");
   const [mainProductCategory, setMainProductCategory] = useState("");
   const [mobileBankName, setMobileBankName] = useState("");
   const [isAcceptTerms, setIsAcceptTerms] = useState(false);
@@ -52,6 +55,10 @@ export default function SellerRegistrationForm({
       // Other custom fields
       if (date) formData.append("date_of_birth", formatDate(date));
       if (gender) formData.append("gender", gender);
+      if (division) formData.append("division", division);
+      if (district) formData.append("district", district);
+      if (thana) formData.append("thana", thana);
+
       if (mainProductCategory)
         formData.append("product_category", mainProductCategory);
       if (mobileBankName) formData.append("mobile_bank_name", mobileBankName);
@@ -75,6 +82,10 @@ export default function SellerRegistrationForm({
           setNidBackImg(null);
           setNidFrontImg(null);
           setGender("");
+          setDivision("");
+          setDistrict("");
+          setThana("");
+           setMainProductCategory("");
           setMobileBankName("");
           setIsAcceptTerms(false);
           setDate(null);
@@ -108,6 +119,10 @@ export default function SellerRegistrationForm({
           setNidBackImg(null);
           setNidFrontImg(null);
           setGender("");
+          setDivision("");
+          setDistrict("");
+          setThana("");
+           setMainProductCategory("");
           setMobileBankName("");
           setIsAcceptTerms(false);
           setDate(null);
@@ -158,6 +173,12 @@ export default function SellerRegistrationForm({
           setNidBackImg={setNidBackImg}
           setMainProductCategory={setMainProductCategory}
           mainProductCategory={mainProductCategory}
+          division={division}
+          setDivision={setDivision}
+          district={district}
+          setDistrict={setDistrict}
+          thana={thana}
+          setThana={setThana}
         />
 
         {/* --- Payment Details --- */}

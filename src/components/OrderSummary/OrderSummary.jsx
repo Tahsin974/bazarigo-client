@@ -123,13 +123,9 @@ export default function OrderSummary({
         customerPhone: mobileBankNumber || user?.phone,
         customerName: user?.name,
         customerAddress:
-          user?.address +
-          "," +
-          user?.thana +
-          "," +
-          user?.district +
-          "-" +
-          +user?.postal_code,
+          [user?.address, user?.thana, user?.district]
+            .filter(Boolean)
+            .join(", ") + (user?.division ? ` - ${user.division}` : ""),
 
         orderItems: orderItems,
         subtotal,
@@ -343,7 +339,7 @@ export default function OrderSummary({
             !user?.address ||
             !user?.district ||
             !user?.thana ||
-            !user?.postal_code ||
+            !user?.division ||
             !user?.phone ||
             (!isCashOnDelivery && !mobileBankNumber && paymentMethod === "")
           }

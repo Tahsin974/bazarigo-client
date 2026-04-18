@@ -24,11 +24,11 @@ export default function Overview({
   const renderPageNumbers = useRenderPageNumbers(
     currentPage,
     totalPages,
-    setCurrentPage
+    setCurrentPage,
   );
   const paginatedFollowingLists = followingLists.slice(
     (currentPage - 1) * 6,
-    currentPage * 6
+    currentPage * 6,
   );
 
   const handleUnFollow = async (userId, sellerId) => {
@@ -104,9 +104,8 @@ export default function Overview({
                     {/* head */}
                     <thead className="text-black">
                       <tr>
-                        <th>Sl</th>
-                        <th>Seller Name</th>
-                        <th>Email</th>
+                        <th>SL</th>
+                        <th>Store Name</th>
                         <th>Action</th>
                       </tr>
                     </thead>
@@ -119,12 +118,7 @@ export default function Overview({
                           </td>
                           <td>
                             <span className="font-semibold">
-                              {f.seller_full_name}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="font-semibold">
-                              {f.seller_email}
+                              {f.seller_store_name}
                             </span>
                           </td>
 
@@ -145,10 +139,12 @@ export default function Overview({
                                   navigate(
                                     `/seller-page/${
                                       f.seller_store_name
-                                    }/store?id=${btoa(f.seller_id)}#`
+                                    }/store?id=${btoa(f.seller_id)}#`,
                                   )
                                 }
-                                className="btn btn-xs btn-error text-white flex items-center gap-1"
+                                className="btn btn-xs bg-orange-400
+                                border-none shadow-none
+                                hover:bg-orange-500  text-white flex items-center gap-1"
                               >
                                 <Store size={14} />
                                 Visit

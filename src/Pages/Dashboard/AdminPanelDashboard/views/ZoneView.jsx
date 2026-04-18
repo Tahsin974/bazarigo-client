@@ -29,7 +29,7 @@ export default function ZoneView({
   const { user } = useAuth();
   const [openZoneModal, setOpenZoneModal] = useState(false);
   const [activeZone, setActiveZone] = useState(null);
-  const [selectArea, setSelectArea] = useState("0");
+  
 
   const handleEdit = (zone) => {
     setOpenZoneModal(true);
@@ -97,6 +97,7 @@ export default function ZoneView({
         toast: true,
         position: "top",
       });
+      
       return;
     }
 
@@ -125,6 +126,7 @@ export default function ZoneView({
             toast: true,
             position: "top",
           });
+          return window.location.reload();
         } else {
           Swal.fire({
             icon: "error",
@@ -241,10 +243,7 @@ export default function ZoneView({
                     <th>Division</th>
                     <th>District</th>
                     <th>Upazila/Thana</th>
-                    <th>Place</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Post Code</th>
+                    
                     <th>Area Type</th>
                     {user.role !== "moderator" && <th>Action</th>}
                   </tr>
@@ -278,34 +277,19 @@ export default function ZoneView({
                           {postalZone.thana}
                         </span>
                       </td>
+                      
                       <td>
-                        <span className="font-semibold">
-                          {postalZone.place}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="font-semibold">
-                          {postalZone.latitude}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="font-semibold">
-                          {postalZone.longitude}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="font-semibold">
-                          {postalZone.postal_code}
-                        </span>
-                      </td>
-                      <td>
-                        {postalZone.is_remote ? (
+                        {postalZone.area_type==="Remote Area" ? (
                           <span className="text-red-500 font-semibold">
-                            Hard-to-Reach
+                           {postalZone.area_type}
+                          </span>
+                        ) :postalZone.area_type==="Sub-Urban" ? (
+                          <span className="text-yellow-500 font-semibold">
+                           {postalZone.area_type}
                           </span>
                         ) : (
                           <span className="text-green-500 font-semibold">
-                            Normal
+                           {postalZone.area_type}
                           </span>
                         )}
                       </td>
@@ -351,8 +335,7 @@ export default function ZoneView({
           onClose={() => setOpenZoneModal(false)}
           refetch={refetch}
           zone={activeZone}
-          selectArea={selectArea}
-          setSelectArea={setSelectArea}
+        
         />
       )}
     </>

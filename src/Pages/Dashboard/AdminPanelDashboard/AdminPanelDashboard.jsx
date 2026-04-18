@@ -264,111 +264,176 @@ export default function AdminPanelDashboard() {
     );
   };
 
-  const handleExport = () => {
-    if (active !== "Products") return;
+ const handleExport = () => {
+  // =========================
+  // COVERAGE AREAS EXPORT
+  // =========================
+  if (active === "Coverage Areas") {
+    if (!coverageAreas.length) return;
 
     const wb = XLSX.utils.book_new();
 
-    // --- Helper: normalize variant ---
-    const normalizeVariant = (v) => {
-      if (v.attributes) return v;
-      const { id, tempId, regular_price, sale_price, stock, ...rest } = v;
-      return {
-        id,
-        tempId,
-        attributes: rest,
-        regular_price: regular_price || 0,
-        sale_price: sale_price || 0,
-        stock: stock || 0,
-      };
-    };
+    const rows = coverageAreas.map((zone) => ({
+      division: zone.division,
+      district: zone.district,
+      thana: zone.thana,
+      area_type: zone.area_type,
+    }));
 
-    // --- Products sheet ---
-    const productRows = products.map((product) => {
-      const parsedVariants = (product.variants || []).map(normalizeVariant);
-      const totalStock = parsedVariants.length
-        ? parsedVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
-        : product.stock || 0;
+    const sheet = XLSX.utils.json_to_sheet(rows);
 
-      return {
-        id: product.id,
-        productName: product.product_name,
-        regular_price: product.regular_price ?? 0,
-        sale_price: product.sale_price ?? 0,
-        discount: product.discount ?? 0,
-        category: product.category ?? "",
-        subcategory: product.subcategory ?? "",
-        subcategory_item: product.subcategory_item ?? "",
-        description: product.description ?? "",
-        stock: totalStock,
-        brand: product.brand ?? "No Brand",
-        weight: product.weight ?? 1,
-        images: (product.images || []).join(";"),
-        thumbnail: product.thumbnail,
-      };
-    });
-
-    const productSheet = XLSX.utils.json_to_sheet(productRows);
-    productSheet["!cols"] = Object.keys(productRows[0] || {}).map((key) => ({
+    sheet["!cols"] = Object.keys(rows[0] || {}).map((key) => ({
       wch: Math.max(key.length, 20),
     }));
-    XLSX.utils.book_append_sheet(wb, productSheet, "Products");
 
-    // --- Variants sheet ---
-    const variantRows = [];
-    const allAttributeKeys = new Set();
+    XLSX.utils.book_append_sheet(wb, sheet, "Coverage Areas");
+    XLSX.writeFile(wb, "Coverage_Areas.xlsx");
+    return;
+  }
 
-    products.forEach((product) => {
-      const parsedVariants = (product.variants || []).map(normalizeVariant);
-      parsedVariants.forEach((v) => {
-        const row = {
-          productId: product.id,
-          productName: product.product_name,
-          regular_price: v.regular_price,
-          sale_price: v.sale_price,
-          stock: v.stock,
-        };
+  // =========================
+  // PAYMENTS EXPORT
+  // =========================
+  if (active === "Payments") {
+    // Payments file
+    if (payments.length) {
+      const wb1 = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.json_to_sheet(payments);
 
-        // Spread attributes
-        if (v.attributes) {
-          Object.entries(v.attributes).forEach(([key, value]) => {
-            row[key] = value;
-            allAttributeKeys.add(key);
-          });
-        }
+      ws1["!cols"] = Object.keys(payments[0] || {}).map((key) => ({
+        wch: Math.max(key.length, 20),
+      }));
 
-        variantRows.push(row);
+      XLSX.utils.book_append_sheet(wb1, ws1, "Payments");
+      XLSX.writeFile(wb1, "Payments_export.xlsx");
+    }
+
+    // Seller Payments file
+    if (sellerPayments.length) {
+      const wb2 = XLSX.utils.book_new();
+      const ws2 = XLSX.utils.json_to_sheet(sellerPayments);
+
+      ws2["!cols"] = Object.keys(sellerPayments[0] || {}).map((key) => ({
+        wch: Math.max(key.length, 20),
+      }));
+
+      XLSX.utils.book_append_sheet(wb2, ws2, "SellerPayments");
+      XLSX.writeFile(wb2, "SellerPayments_export.xlsx");
+    }
+
+    return;
+  }
+
+  // =========================
+  // PRODUCTS EXPORT
+  // =========================
+  if (active !== "Products") return;
+
+  const wb = XLSX.utils.book_new();
+
+  // --- normalize variant ---
+  const normalizeVariant = (v) => {
+    if (v.attributes) return v;
+    const { id, tempId, regular_price, sale_price, stock, ...rest } = v;
+    return {
+      id,
+      tempId,
+      attributes: rest,
+      regular_price: regular_price || 0,
+      sale_price: sale_price || 0,
+      stock: stock || 0,
+    };
+  };
+
+  // --- Products sheet ---
+  const productRows = products.map((product) => {
+    const parsedVariants = (product.variants || []).map(normalizeVariant);
+    const totalStock = parsedVariants.length
+      ? parsedVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
+      : product.stock || 0;
+
+    return {
+      id: product.id,
+      productName: product.product_name,
+      regular_price: product.regular_price ?? 0,
+      sale_price: product.sale_price ?? 0,
+      discount: product.discount ?? 0,
+      category: product.category ?? "",
+      subcategory: product.subcategory ?? "",
+      subcategory_item: product.subcategory_item ?? "",
+      description: product.description ?? "",
+      stock: totalStock,
+      brand: product.brand ?? "No Brand",
+      weight: product.weight ?? 1,
+      images: (product.images || []).join(";"),
+      thumbnail: product.thumbnail,
+    };
+  });
+
+  const productSheet = XLSX.utils.json_to_sheet(productRows);
+
+  productSheet["!cols"] = Object.keys(productRows[0] || {}).map((key) => ({
+    wch: Math.max(key.length, 20),
+  }));
+
+  XLSX.utils.book_append_sheet(wb, productSheet, "Products");
+
+  // --- Variants sheet ---
+  const variantRows = [];
+  const allAttributeKeys = new Set();
+
+  products.forEach((product) => {
+    const parsedVariants = (product.variants || []).map(normalizeVariant);
+
+    parsedVariants.forEach((v) => {
+      const row = {
+        productId: product.id,
+        productName: product.product_name,
+        regular_price: v.regular_price,
+        sale_price: v.sale_price,
+        stock: v.stock,
+      };
+
+      if (v.attributes) {
+        Object.entries(v.attributes).forEach(([key, value]) => {
+          row[key] = value;
+          allAttributeKeys.add(key);
+        });
+      }
+
+      variantRows.push(row);
+    });
+  });
+
+  if (variantRows.length) {
+    const columns = [
+      "productId",
+      "productName",
+      "regular_price",
+      "sale_price",
+      "stock",
+      ...Array.from(allAttributeKeys),
+    ];
+
+    variantRows.forEach((row) => {
+      columns.forEach((col) => {
+        if (!(col in row)) row[col] = "";
       });
     });
 
-    if (variantRows.length) {
-      const columns = [
-        "productId",
-        "productName",
-        "regular_price",
-        "sale_price",
-        "stock",
-        ...Array.from(allAttributeKeys),
-      ];
+    const variantSheet = XLSX.utils.json_to_sheet(variantRows, {
+      header: columns,
+    });
 
-      // Ensure all rows have all columns
-      variantRows.forEach((row) => {
-        columns.forEach((col) => {
-          if (!(col in row)) row[col] = "";
-        });
-      });
+    variantSheet["!cols"] = columns.map((key) => ({
+      wch: Math.max(key.length, 20),
+    }));
 
-      const variantSheet = XLSX.utils.json_to_sheet(variantRows, {
-        header: columns,
-      });
-      variantSheet["!cols"] = columns.map((key) => ({
-        wch: Math.max(key.length, 20),
-      }));
-      XLSX.utils.book_append_sheet(wb, variantSheet, "Variants");
-    }
+    XLSX.utils.book_append_sheet(wb, variantSheet, "Variants");
+  }
 
-    XLSX.writeFile(wb, "Products_export.xlsx");
-  };
+  XLSX.writeFile(wb, "Products_export.xlsx");
+};
 
   const selectAll = () => {
     if (active === "Products" || active === "FlashSale") {
@@ -392,6 +457,7 @@ export default function AdminPanelDashboard() {
       setSelected(selected.length === id.length ? [] : id);
     }
   };
+  console.log("selected:", selected);
 
   const handleBulkUpload = async () => {
     const file = fileRef.current.files[0];
@@ -495,13 +561,9 @@ export default function AdminPanelDashboard() {
         division: item.division,
         district: item.district,
         thana: item.thana,
-        place: item.place,
-        postal_code: item.postal_code,
-        latitude: Number(item.latitude || 0),
-        longitude: Number(item.longitude || 0),
-        is_remote:
-          item.is_remote === true || item.is_remote === "true" || false,
+       area_type: item.area_type,
       }));
+     
 
       // Send to backend
       const res = await axiosPublic.post("/postal-zones/bulk", postalZones);
@@ -516,8 +578,8 @@ export default function AdminPanelDashboard() {
           timer: 1500,
         });
 
-        fileRef.current.value = null; // reset input
         refetchAreas();
+        fileRef.current.value = null; // reset input
       } else {
         Swal.fire({
           icon: "error",
@@ -529,6 +591,7 @@ export default function AdminPanelDashboard() {
         });
       }
     } catch (err) {
+      console.log(err);
       Swal.fire({
         icon: "error",
         title: `${err.message}`,

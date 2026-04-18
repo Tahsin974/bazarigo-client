@@ -33,6 +33,7 @@ function CustomersView({
     1,
     Math.ceil(filteredCustomers.length / customerPageSize),
   );
+  
 
   const renderPageNumbers = useRenderPageNumbers(
     customerPage,

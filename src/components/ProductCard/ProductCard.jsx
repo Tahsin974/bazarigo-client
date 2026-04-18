@@ -112,7 +112,7 @@ export default function ProductCard({ item, fromFlashSale = false }) {
             </h2>
 
             {/* Title → Price : 6px */}
-            <div className="flex items-center justify-between mt-1.5">
+            <div className="flex items-center justify-between gap-2 mt-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-[#FF0055] font-bold">
                   {item.sale_price > 1
@@ -128,10 +128,10 @@ export default function ProductCard({ item, fromFlashSale = false }) {
               </div>
 
               {item.discount > 0 && (
-                <span className="bg-[#FF0055] text-white text-sm font-bold px-2 py-0.5 rounded-full">
-                  {item.discount}% OFF
-                </span>
-              )}
+  <span className="bg-[#FF0055] text-white text-sm font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+    {item.discount}% OFF
+  </span>
+)}
             </div>
 
             {/* Price → Reviews : 8px */}

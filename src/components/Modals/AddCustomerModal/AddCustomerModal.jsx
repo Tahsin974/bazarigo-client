@@ -9,6 +9,9 @@ import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import useAxiosPublic from "../../../Utils/Hooks/useAxiosPublic";
 import useUsers from "../../../Utils/Hooks/useUsers";
+import useAddress from "../../../Utils/Hooks/useAddress";
+import SelectField from "../../ui/SelectField";
+import { InputField } from "../../ui/InputField";
 
 export default function AddCustomerModal({ onClose }) {
   const axiosPublic = useAxiosPublic();
@@ -20,9 +23,27 @@ export default function AddCustomerModal({ onClose }) {
   } = useForm({ mode: "onChange" });
   const { refetch } = useUsers();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+ 
   const [image, setImage] = useState(null);
+  const [division, setDivision] = useState("");
+  const [district, setDistrict] = useState("");
+  const [thana, setThana] = useState("");
+ const {
+     divisions, divisionsLoading,
+     districts, districtsLoading,
+     thanas,    thanasLoading,
+   } = useAddress(division, district);
+   const handleDivisionChange = (e) => {
+    setDivision(e.target.value);
+    setDistrict("");   // cascade reset
+    setThana("");
+  };
+
+  const handleDistrictChange = (e) => {
+    setDistrict(e.target.value);
+    setThana("");      // cascade reset
+  };
+ 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -42,9 +63,9 @@ export default function AddCustomerModal({ onClose }) {
       formData.append("phone", data.phone);
       formData.append("password", data.password);
       formData.append("address", data.address);
-      formData.append("district", data.district);
-      formData.append("thana", data.thana);
-      formData.append("postal_code", data.postal_code);
+      formData.append("division", division);
+      formData.append("district", district);
+      formData.append("thana", thana);
 
       const res = await axiosPublic.post("/create-user", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -61,6 +82,9 @@ export default function AddCustomerModal({ onClose }) {
         });
         reset();
         setImage(null);
+        setDivision("");
+        setDistrict("");
+        setThana("");
         onClose();
         refetch();
       }
@@ -147,7 +171,7 @@ export default function AddCustomerModal({ onClose }) {
               >
                 <div className="flex flex-wrap gap-3">
                   <div className="flex-1">
-                    <input
+                    <InputField
                       {...register("first_Name", {
                         required: "First name is required",
                         pattern: {
@@ -156,19 +180,18 @@ export default function AddCustomerModal({ onClose }) {
                         },
                       })}
                       placeholder="First Name"
+                      label="First Name"
                       className={`w-full px-4 py-3 rounded-lg border ${
                         errors.first_Name ? "border-red-500" : "border-gray-300"
                       } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
+                       errors={errors.first_Name}
+                      errorsMessage={errors.first_Name?.message}
                     />
-                    {errors.first_Name && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.first_Name.message}
-                      </p>
-                    )}
+                    
                   </div>
 
                   <div className="flex-1">
-                    <input
+                    <InputField
                       {...register("last_Name", {
                         required: "Last name is required",
                         pattern: {
@@ -177,20 +200,20 @@ export default function AddCustomerModal({ onClose }) {
                         },
                       })}
                       placeholder="Last Name"
+                      label="Last Name"
                       className={`w-full px-4 py-3 rounded-lg border ${
                         errors.last_Name ? "border-red-500" : "border-gray-300"
                       } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
+                      errors={errors.last_Name}
+                      errorsMessage={errors.last_Name?.message}
                     />
-                    {errors.last_Name && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.last_Name.message}
-                      </p>
-                    )}
+                   
                   </div>
                 </div>
 
                 <div>
-                  <input
+                  <InputField
+                  label="Email Address"
                     type="email"
                     {...register("email", {
                       required: "Email is required",
@@ -203,15 +226,13 @@ export default function AddCustomerModal({ onClose }) {
                     className={`w-full px-4 py-3 rounded-lg border ${
                       errors.email ? "border-red-500" : "border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
+                    errors={errors.email}
+                    errorsMessage={errors.email?.message}
                   />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.email.message}
-                    </p>
-                  )}
+                  
                 </div>
                 <div className="flex-1">
-                  <input
+                  <InputField
                     type="number"
                     {...register("phone", {
                       required: "Phone number is required",
@@ -225,22 +246,20 @@ export default function AddCustomerModal({ onClose }) {
                         e.preventDefault(); // keyboard up/down disable
                       }
                     }}
-                    onWheel={(e) => e.target.blur()}
+                    label="Phone Number"
                     placeholder="Phone Number"
                     className={`w-full px-4 py-3 rounded-lg border ${
                       errors.phone ? "border-red-500" : "border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
+                      errors={errors.phone}
+                      errorsMessage={errors.phone?.message}
                   />
-                  {errors.phone && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.phone.message}
-                    </p>
-                  )}
+               
                 </div>
                 <div>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
+                  
+                    <InputField
+                      type={"password"}
                       {...register("password", {
                         required: "Password is required",
                         pattern: {
@@ -250,37 +269,33 @@ export default function AddCustomerModal({ onClose }) {
                             "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
                         },
                       })}
+                      label="Password"
                       placeholder="Password"
                       className={`w-full px-4 py-3 rounded-lg border ${
                         errors.password ? "border-red-500" : "border-gray-300"
                       } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
+                      errors={errors.password}
+                      errorsMessage={errors.password?.message}
                     />
 
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((s) => !s)}
-                      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.password.message}
-                    </p>
-                  )}
+                    
+                  
+                 
                 </div>
 
                 <div>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
+                  
+                    <InputField
+                      type={"password"}
                       {...register("confirm_Password", {
                         required: "Confirm Password is required",
                         validate: (value, allValues) =>
                           value === allValues.password ||
                           "Passwords do not match",
                       })}
+                      label="Confirm Password"
+                       errors={errors.confirm_Password}
+                      errorsMessage={errors.confirm_Password?.message}
                       placeholder="Confirm Password"
                       className={`w-full px-4 py-3 rounded-lg border ${
                         errors.confirm_Password
@@ -288,27 +303,14 @@ export default function AddCustomerModal({ onClose }) {
                           : "border-gray-300"
                       } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((s) => !s)}
-                      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
-                    </button>
-                  </div>
-                  {errors.confirm_Password && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.confirm_Password.message}
-                    </p>
-                  )}
+                    
+                
+                  
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <div className="w-full">
-                    <input
+                    <InputField
+                    label="Address"
                       {...register("address", {
                         required: "Address is required",
                         pattern: {
@@ -328,79 +330,82 @@ export default function AddCustomerModal({ onClose }) {
                     )}
                   </div>
 
-                  <div className="flex-1">
-                    <input
-                      {...register("district", {
-                        required: "District is required",
-                        pattern: {
-                          value: /^[A-Za-z\s]{2,50}$/,
-                          message: "Enter a valid district name",
-                        },
-                      })}
-                      placeholder="Enter district name (e.g., Dhaka)"
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        errors.district ? "border-red-500" : "border-gray-300"
-                      } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                    />
-                    {errors.district && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.district.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      {...register("thana", {
-                        required: "Thana is required",
-                        pattern: {
-                          value: /^[A-Za-z\s]{2,50}$/,
-                          message: "Enter a valid thana name",
-                        },
-                      })}
-                      placeholder="Enter thana or upazila (e.g., Mirpur)"
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        errors.thana ? "border-red-500" : "border-gray-300"
-                      } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                    />
-                    {errors.thana && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.thana.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="number"
-                      {...register("postal_code", {
-                        required: "Postal code is required",
-                        pattern: {
-                          value: /^\d{4,5}$/,
-                          message: "Postal code must be 4–5 digits",
-                        },
-                      })}
-                      placeholder="Enter postal code (e.g., 1216)"
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        errors.postal_code
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                      onKeyDown={(e) => {
-                        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-                          e.preventDefault(); // keyboard up/down disable
-                        }
-                      }}
-                      onWheel={(e) => e.target.blur()}
-                    />
-                    {errors.postal_code && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.postal_code.message}
-                      </p>
-                    )}
-                  </div>
+                  {/* Division */}
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-1">
+                                       Division
+                                        
+                                      </label>
+                                        <SelectField
+                          selectValue={division}
+                          selectValueChange={handleDivisionChange}
+                          isWide={true}
+                          required
+                        >
+                          <option value="" disabled>
+                            {divisionsLoading ? "Loading..." : "Select Division"}
+                          </option>
+                          {divisions.map((div) => (
+                            <option key={div} value={div}>{div}</option>
+                          ))}
+                        </SelectField>
+                                      </div>
+                                      {/* District */}
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-1">
+                                       District
+                                        
+                                      </label>
+                                       <SelectField
+                          selectValue={district}
+                          selectValueChange={handleDistrictChange}
+                          isWide={true}
+                          required
+                          disabled={!division || districtsLoading}
+                        >
+                          <option value="" disabled>
+                            {districtsLoading
+                              ? "Loading..."
+                              : !division
+                              ? "Select Division first"
+                              : "Select District"}
+                          </option>
+                          {districts.map((dist) => (
+                            <option key={dist} value={dist}>{dist}</option>
+                          ))}
+                        </SelectField>
+                                      </div>
+                                      {/* Thana */}
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium mb-1">
+                                       Thana
+                                        
+                                      </label>
+                                        <SelectField
+                          selectValue={thana}
+                          selectValueChange={(e) => setThana(e.target.value)}
+                          isWide={true}
+                          required
+                          disabled={!district || thanasLoading}
+                        >
+                          <option value="" disabled>
+                            {thanasLoading
+                              ? "Loading..."
+                              : !district
+                              ? "Select District first"
+                              : "Select Thana"}
+                          </option>
+                          {thanas.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </SelectField>
+                                      </div>
                 </div>
 
                 <Button
-                  disabled={!isValid}
+                  disabled={!isValid || divisionsLoading || districtsLoading || thanasLoading
+                    || !division || !district || !thana
+                  }
                   type="submit"
                   className="w-full bg-[#00C853] hover:bg-[#00B34A] text-white font-semibold py-3 rounded-lg shadow-lg  transition-colors flex justify-center cursor-pointer disabled:bg-gray-300 disabled:text-gray-500"
                 >

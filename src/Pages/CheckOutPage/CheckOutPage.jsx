@@ -14,6 +14,7 @@ import useAxiosPublic from "../../Utils/Hooks/useAxiosPublic";
 import useAuth from "../../Utils/Hooks/useAuth";
 import AddBtn from "../../components/ui/AddBtn";
 import Loading from "../../components/Loading/Loading";
+import useAddress from "../../Utils/Hooks/useAddress";
 
 export default function CheckOutPage() {
   const axiosPublic = useAxiosPublic();
@@ -21,9 +22,13 @@ export default function CheckOutPage() {
   const { refetch } = useCart();
   const [customerName, setCustomerName] = useState(null);
   const [customerAddress, setCustomerAddress] = useState(null);
-  const [customerDistrict, setCustomerDistrict] = useState(null);
-  const [customerThana, setCustomerThana] = useState(null);
-  const [customerPostalCode, setCustomerPostalCode] = useState(null);
+  const [customerDistrict, setCustomerDistrict] = useState(
+    user?.district || "",
+  );
+  const [customerThana, setCustomerThana] = useState(user?.thana || "");
+  const [customerDivision, setCustomerDivision] = useState(
+    user?.division || "",
+  );
   const [customerPhone, setCustomerPhone] = useState("");
 
   const location = useLocation();
@@ -38,7 +43,24 @@ export default function CheckOutPage() {
   const [mobileBankNumber, setMobileBankNumber] = useState("");
 
   const [isCashOnDelivery, setIsCashOnDelivery] = useState(false);
+  const {
+    divisions,
+    divisionsLoading,
+    districts,
+    districtsLoading,
+    thanas,
+    thanasLoading,
+  } = useAddress(customerDivision, customerDistrict);
+  const handleDivisionChange = (e) => {
+    setCustomerDivision(e.target.value);
+    setCustomerDistrict(""); // cascade reset
+    setCustomerThana("");
+  };
 
+  const handleDistrictChange = (e) => {
+    setCustomerDistrict(e.target.value);
+    setCustomerThana(""); // cascade reset
+  };
   const removeItem = async (cartId, productId) => {
     try {
       // 🔹 কনফার্মেশন ডায়ালগ দেখাও
@@ -113,7 +135,7 @@ export default function CheckOutPage() {
     const options = { month: "short", day: "numeric" };
     return `${minDate.toLocaleDateString(
       "en-US",
-      options
+      options,
     )} – ${maxDate.toLocaleDateString("en-US", options)}`;
   }
 
@@ -123,9 +145,9 @@ export default function CheckOutPage() {
         ...user,
         full_name: customerName || user.name,
         address: customerAddress || user.address,
+        division: customerDivision || user.division,
         district: customerDistrict || user.district,
         thana: customerThana || user.thana,
-        postal_code: customerPostalCode || user.postal_code,
         phone: customerPhone || user.phone,
       };
 
@@ -157,7 +179,7 @@ export default function CheckOutPage() {
               ...item,
               deliveries: deliveryRes.data.result[0],
             };
-          })
+          }),
         );
 
         setCheckoutItems(updatedItems);
@@ -226,51 +248,82 @@ export default function CheckOutPage() {
                     onWheel={(e) => e.target.blur()}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]"
                   />
+                  <input
+                    type="text"
+                    placeholder="Address"
+                    name="address"
+                    defaultValue={user?.address || customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]"
+                  />
 
                   <div className="flex flex-wrap gap-3">
+                    {" "}
+                    {/* Division */}
                     <div className="w-full">
-                      <input
-                        type="text"
-                        placeholder="Address"
-                        name="address"
-                        defaultValue={user?.address || customerAddress}
-                        onChange={(e) => setCustomerAddress(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]"
-                      />
+                      <SelectField
+                        selectValue={customerDivision}
+                        selectValueChange={handleDivisionChange}
+                        isWide={true}
+                        required
+                      >
+                        <option value="" disabled>
+                          {divisionsLoading ? "Loading..." : "Select Division"}
+                        </option>
+                        {divisions.map((div) => (
+                          <option key={div} value={div}>
+                            {div}
+                          </option>
+                        ))}
+                      </SelectField>
                     </div>
-
-                    <div className="flex-1">
-                      <input
-                        placeholder="Enter district name (e.g., Dhaka)"
-                        defaultValue={user?.district || customerDistrict}
-                        onChange={(e) => setCustomerDistrict(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                      />
+                    {/* District */}
+                    <div className="w-full">
+                      <SelectField
+                        selectValue={customerDistrict}
+                        selectValueChange={handleDistrictChange}
+                        isWide={true}
+                        required
+                        disabled={!customerDivision || districtsLoading}
+                      >
+                        <option value="" disabled>
+                          {districtsLoading
+                            ? "Loading..."
+                            : !customerDivision
+                              ? "Select Division first"
+                              : "Select District"}
+                        </option>
+                        {districts.map((dist) => (
+                          <option key={dist} value={dist}>
+                            {dist}
+                          </option>
+                        ))}
+                      </SelectField>
                     </div>
-                    <div className="flex-1">
-                      <input
-                        placeholder="Enter thana or upazila (e.g., Mirpur)"
-                        defaultValue={user?.thana || customerThana}
-                        onChange={(e) => setCustomerThana(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="number"
-                        placeholder="Enter postal code (e.g., 1216)"
-                        defaultValue={
-                          user?.postal_code ?? customerPostalCode ?? ""
+                    {/* Thana */}
+                    <div className="w-full">
+                      <SelectField
+                        selectValue={customerThana}
+                        selectValueChange={(e) =>
+                          setCustomerThana(e.target.value)
                         }
-                        onChange={(e) => setCustomerPostalCode(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF0055]`}
-                        onKeyDown={(e) => {
-                          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-                            e.preventDefault(); // keyboard up/down disable
-                          }
-                        }}
-                        onWheel={(e) => e.target.blur()}
-                      />
+                        isWide={true}
+                        required
+                        disabled={!customerDistrict || thanasLoading}
+                      >
+                        <option value="" disabled>
+                          {thanasLoading
+                            ? "Loading..."
+                            : !customerDistrict
+                              ? "Select District first"
+                              : "Select Thana"}
+                        </option>
+                        {thanas.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </SelectField>
                     </div>
                   </div>
 
@@ -455,14 +508,14 @@ export default function CheckOutPage() {
                               "/deliveries",
                               {
                                 params: deliveryPayload,
-                              }
+                              },
                             );
 
                             return {
                               ...item,
                               deliveries: deliveryRes.data.result[0],
                             };
-                          })
+                          }),
                         );
 
                         setCheckoutItems(updatedItems);
@@ -499,7 +552,7 @@ export default function CheckOutPage() {
                                     timeZone: "Asia/Dhaka",
                                     hour12: false,
                                   }),
-                                  checkoutItem.deliveries.delivery_time
+                                  checkoutItem.deliveries.delivery_time,
                                 )}
                               </span>
                             </>
@@ -522,7 +575,7 @@ export default function CheckOutPage() {
                                     timeZone: "Asia/Dhaka",
                                     hour12: false,
                                   }),
-                                  checkoutItem.deliveries.delivery_time
+                                  checkoutItem.deliveries.delivery_time,
                                 )}
                               </span>
                             </>
@@ -561,14 +614,14 @@ export default function CheckOutPage() {
                                       <>
                                         ৳
                                         {item.sale_price.toLocaleString(
-                                          "en-IN"
+                                          "en-IN",
                                         )}
                                       </>
                                     ) : (
                                       <>
                                         ৳
                                         {item.regular_price.toLocaleString(
-                                          "en-IN"
+                                          "en-IN",
                                         )}
                                       </>
                                     )}
@@ -577,7 +630,7 @@ export default function CheckOutPage() {
                                     <span className="text-gray-400 line-through ">
                                       ৳
                                       {item.regular_price.toLocaleString(
-                                        "en-IN"
+                                        "en-IN",
                                       )}
                                     </span>
                                   )}
@@ -597,7 +650,7 @@ export default function CheckOutPage() {
                                             "sale_price",
                                             "stock",
                                             "id",
-                                          ].includes(key)
+                                          ].includes(key),
                                       )
                                       .map(([variant, value], index, array) => (
                                         <p
@@ -645,29 +698,4 @@ export default function CheckOutPage() {
       )}
     </div>
   );
-}
-
-{
-  /* <Card className="rounded-2xl shadow-md">
-            <CardContent className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold">Payment Details</h2>
-              <input
-                type="text"
-                placeholder="Card Number"
-                className="w-full px-4 py-3 border rounded-lg"
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="MM/YY"
-                  className="px-4 py-3 border rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="CVC"
-                  className="px-4 py-3 border rounded-lg"
-                />
-              </div>
-            </CardContent>
-          </Card> */
 }

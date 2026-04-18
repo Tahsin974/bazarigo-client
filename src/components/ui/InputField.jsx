@@ -24,6 +24,12 @@ export const InputField = ({
           type={
             type === "password" ? (showPassword ? "text" : "password") : type
           }
+           onKeyDown={(e) => {
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                      e.preventDefault(); // keyboard up/down disable
+                    }
+                  }}
+                  onWheel={(e) => e.target.blur()}
         />
         {type === "password" && (
           <button

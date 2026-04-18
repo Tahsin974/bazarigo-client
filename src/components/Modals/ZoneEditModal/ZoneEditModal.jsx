@@ -4,19 +4,14 @@ import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 import SelectField from "../../ui/SelectField";
 import useAxiosPublic from "../../../Utils/Hooks/useAxiosPublic";
-export default function ZoneEditModal({
-  onClose,
-  zone = {},
-  refetch,
-  selectArea,
-  setSelectArea,
-}) {
+import { useState } from "react";
+export default function ZoneEditModal({ onClose, zone = {}, refetch }) {
   const axiosPublic = useAxiosPublic();
   const { register, handleSubmit, reset } = useForm();
-
+  const [selectArea, setSelectArea] = useState(zone?.area_type || "");
   const onSubmit = async (data) => {
     try {
-      const payload = { ...data, is_remote: selectArea === 0 ? false : true };
+      const payload = { ...data, area_type: selectArea };
 
       if (zone) {
         const res = await axiosPublic.put(`/postal-zones/${zone.id}`, payload);
@@ -129,57 +124,19 @@ export default function ZoneEditModal({
                 required
                 className="md:w-auto w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-[#FF0055] focus:ring-2  focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white"
               />
-              <input
-                placeholder="Place"
-                {...register("place", {
-                  required: "place is required",
-                })}
-                defaultValue={zone?.place || null}
-                required
-                className="md:w-auto w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-[#FF0055] focus:ring-2  focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white"
-              />
-              <input
-                type="number"
-                step="0.000001"
-                placeholder="Latitude"
-                {...register("latitude", {
-                  required: "Latitude is required",
-                })}
-                defaultValue={zone?.latitude || null}
-                required
-                className="md:w-auto w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-[#FF0055] focus:ring-2  focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white"
-              />
-              <input
-                type="number"
-                step="0.000001"
-                placeholder="Longitude"
-                {...register("longitude", {
-                  required: "Longitude is required",
-                })}
-                defaultValue={zone?.longitude || null}
-                required
-                className="md:w-auto w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-[#FF0055] focus:ring-2  focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white"
-              />
-              <input
-                type="number"
-                placeholder="Postal code"
-                {...register("postal_code", {
-                  required: "Postal Code is required",
-                })}
-                defaultValue={zone?.postal_code || null}
-                required
-                className="md:w-auto w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-[#FF0055] focus:ring-2  focus:ring-[#FF0055] focus:outline-none shadow-sm bg-white"
-              />
+
               <div>
                 <SelectField
-                  selectValue={(zone?.is_remote ? 1 : 0) || selectArea}
-                  selectValueChange={(e) =>
-                    setSelectArea(Number(e.target.value))
-                  }
+                  selectValue={selectArea}
+                  selectValueChange={(e) => setSelectArea(e.target.value)}
                   isWide={true}
                 >
-                  <option value={0}>Normal Area</option>
-                  <option value={1}>Remote Area</option>
+                  <option value="" disabled>
+                    Select Area Type
+                  </option>
+                  <option value={"City Central"}>City Central</option>
+                  <option value={"Sub-Urban"}>Sub-Urban</option>
+                  <option value={"Remote Area"}>Remote Area</option>
                 </SelectField>
               </div>
             </div>

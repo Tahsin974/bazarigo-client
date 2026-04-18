@@ -120,20 +120,53 @@ export default function MyProfileView({ activeTab }) {
                       <p className="text-sm text-gray-500">Address</p>
                       <p className="font-medium text-gray-800">
                         {user?.address ||
-                        user.thana ||
-                        user.district ||
-                        user.postal_code
+                        user?.thana ||
+                        user?.district ||
+                        user?.division
                           ? `${user?.address || ""}${
                               user.address && user.thana ? ", " : ""
-                            }${user.thana || ""}${
+                            }${user?.thana || ""}${
                               (user.address || user.thana) && user.district
                                 ? ", "
                                 : ""
-                            }${user.district || ""}${
-                              user.postal_code ? " - " + user.postal_code : ""
-                            }`
+                            }${user?.district || ""}${
+                              (user.address || user.thana || user.district) &&
+                              user.division
+                                ? ", "
+                                : ""
+                            }${user?.division || ""}`
                           : "Not Provided"}
                       </p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl shadow-sm sm:col-span-2">
+                      <MapPin className="text-[#FF0055]" size={20} />
+                      <div>
+                        <p className="text-sm text-gray-500">
+                          Business Address
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {user?.business_address ||
+                          user?.thana ||
+                          user?.district ||
+                          user?.division
+                            ? `${user?.business_address || ""}${
+                                user.business_address && user.thana ? ", " : ""
+                              }${user?.thana || ""}${
+                                (user.business_address || user.thana) &&
+                                user.district
+                                  ? ", "
+                                  : ""
+                              }${user?.district || ""}${
+                                (user.business_address ||
+                                  user.thana ||
+                                  user.district) &&
+                                user.division
+                                  ? ", "
+                                  : ""
+                              }${user?.division || ""}`
+                            : "Not Provided"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -203,18 +236,24 @@ export default function MyProfileView({ activeTab }) {
                         </p>
                         <p className="font-medium text-gray-800">
                           {user?.business_address ||
-                          user.thana ||
-                          user.district ||
-                          user.postal_code
-                            ? `${user.business_address || ""}${
+                          user?.thana ||
+                          user?.district ||
+                          user?.division
+                            ? `${user?.business_address || ""}${
                                 user.business_address && user.thana ? ", " : ""
-                              }${user.thana || ""}${
-                                (user.address || user.thana) && user.district
+                              }${user?.thana || ""}${
+                                (user.business_address || user.thana) &&
+                                user.district
                                   ? ", "
                                   : ""
-                              }${user.district || ""}${
-                                user.postal_code ? " - " + user.postal_code : ""
-                              }`
+                              }${user?.district || ""}${
+                                (user.business_address ||
+                                  user.thana ||
+                                  user.district) &&
+                                user.division
+                                  ? ", "
+                                  : ""
+                              }${user?.division || ""}`
                             : "Not Provided"}
                         </p>
                       </div>
