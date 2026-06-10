@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useRef, useState } from "react";
 
 export default function ProductImageGallery({ product }) {
-  const images = product.product_img || [];
+  const images = product.returnImages || [];
   const [active, setActive] = useState(0);
   const baseUrl = import.meta.env.VITE_BASEURL;
   const videoRef = useRef();

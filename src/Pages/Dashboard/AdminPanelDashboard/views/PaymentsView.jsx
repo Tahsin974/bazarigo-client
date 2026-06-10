@@ -3,8 +3,9 @@ import SearchField from "../../../../components/ui/SearchField";
 import FormattedDate from "../../../../Utils/Helpers/FormattedDate";
 import useAxiosPublic from "../../../../Utils/Hooks/useAxiosPublic";
 import { useRenderPageNumbers } from "../../../../Utils/Helpers/useRenderPageNumbers";
-import { Banknote, CreditCard } from "lucide-react";
+import { Banknote, CreditCard, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
+import useAuth from "../../../../Utils/Hooks/useAuth";
 
 function PaymentsView({
   payments,
@@ -25,6 +26,7 @@ function PaymentsView({
   paginatedSellerPayments,
 }) {
   const axiosPublic = useAxiosPublic();
+  const { user } = useAuth();
   const totalPages = Math.max(
     1,
     Math.ceil(filteredPayments.length / paymentPageSize),
@@ -50,6 +52,54 @@ function PaymentsView({
       });
 
       return refetch();
+    }
+  };
+  const HandleDelete = async (id) => {
+    try {
+      Swal.fire({
+        icon: "warning",
+        title: "Are You Sure?",
+        showCancelButton: true, // confirm + cancel button
+        confirmButtonColor: "#00C853",
+        cancelButtonColor: "#f72c2c",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const res = await axiosPublic.delete(`/payments/delete/${id}`);
+          if (res.data.deletedCount > 0) {
+            Swal.fire({
+              icon: "success",
+              title: "Payment Deleted Successfully",
+              showConfirmButton: false,
+              timer: 1500,
+              toast: true,
+              position: "top",
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Opps! Try Again",
+              showConfirmButton: false,
+              timer: 1500,
+              toast: true,
+              position: "top",
+            });
+          }
+          return refetch();
+        } else {
+          return;
+        }
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: `${error.message}`,
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true,
+        position: "top",
+      });
     }
   };
   const renderPageNumbers = useRenderPageNumbers(
@@ -100,6 +150,7 @@ function PaymentsView({
                   <th>Method</th>
                   <th>Number</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -147,6 +198,18 @@ function PaymentsView({
                           Approved
                         </span>
                       )}
+                    </td>
+                    <td>
+                      {/* Single Delete */}
+                      {user?.role === "admin" ||
+                        (user?.role === "super admin" && (
+                          <button
+                            onClick={() => HandleDelete(p.id)}
+                            className={`bg-red-100 hover:bg-[#e92323] text-red-600 rounded px-3 py-2 hover:text-white cursor-pointer disabled:bg-gray-300 disabled:text-gray-500`}
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        ))}
                     </td>
                   </tr>
                 ))}

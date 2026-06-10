@@ -264,176 +264,176 @@ export default function AdminPanelDashboard() {
     );
   };
 
- const handleExport = () => {
-  // =========================
-  // COVERAGE AREAS EXPORT
-  // =========================
-  if (active === "Coverage Areas") {
-    if (!coverageAreas.length) return;
+  const handleExport = () => {
+    // =========================
+    // COVERAGE AREAS EXPORT
+    // =========================
+    if (active === "Coverage Areas") {
+      if (!coverageAreas.length) return;
+
+      const wb = XLSX.utils.book_new();
+
+      const rows = coverageAreas.map((zone) => ({
+        division: zone.division,
+        district: zone.district,
+        thana: zone.thana,
+        area_type: zone.area_type,
+      }));
+
+      const sheet = XLSX.utils.json_to_sheet(rows);
+
+      sheet["!cols"] = Object.keys(rows[0] || {}).map((key) => ({
+        wch: Math.max(key.length, 20),
+      }));
+
+      XLSX.utils.book_append_sheet(wb, sheet, "Coverage Areas");
+      XLSX.writeFile(wb, "Coverage_Areas.xlsx");
+      return;
+    }
+
+    // =========================
+    // PAYMENTS EXPORT
+    // =========================
+    if (active === "Payments") {
+      // Payments file
+      if (payments.length) {
+        const wb1 = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(payments);
+
+        ws1["!cols"] = Object.keys(payments[0] || {}).map((key) => ({
+          wch: Math.max(key.length, 20),
+        }));
+
+        XLSX.utils.book_append_sheet(wb1, ws1, "Payments");
+        XLSX.writeFile(wb1, "Payments_export.xlsx");
+      }
+
+      // Seller Payments file
+      if (sellerPayments.length) {
+        const wb2 = XLSX.utils.book_new();
+        const ws2 = XLSX.utils.json_to_sheet(sellerPayments);
+
+        ws2["!cols"] = Object.keys(sellerPayments[0] || {}).map((key) => ({
+          wch: Math.max(key.length, 20),
+        }));
+
+        XLSX.utils.book_append_sheet(wb2, ws2, "SellerPayments");
+        XLSX.writeFile(wb2, "SellerPayments_export.xlsx");
+      }
+
+      return;
+    }
+
+    // =========================
+    // PRODUCTS EXPORT
+    // =========================
+    if (active !== "Products") return;
 
     const wb = XLSX.utils.book_new();
 
-    const rows = coverageAreas.map((zone) => ({
-      division: zone.division,
-      district: zone.district,
-      thana: zone.thana,
-      area_type: zone.area_type,
-    }));
+    // --- normalize variant ---
+    const normalizeVariant = (v) => {
+      if (v.attributes) return v;
+      const { id, tempId, regular_price, sale_price, stock, ...rest } = v;
+      return {
+        id,
+        tempId,
+        attributes: rest,
+        regular_price: regular_price || 0,
+        sale_price: sale_price || 0,
+        stock: stock || 0,
+      };
+    };
 
-    const sheet = XLSX.utils.json_to_sheet(rows);
+    // --- Products sheet ---
+    const productRows = products.map((product) => {
+      const parsedVariants = (product.variants || []).map(normalizeVariant);
+      const totalStock = parsedVariants.length
+        ? parsedVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
+        : product.stock || 0;
 
-    sheet["!cols"] = Object.keys(rows[0] || {}).map((key) => ({
+      return {
+        id: product.id,
+        productName: product.product_name,
+        regular_price: product.regular_price ?? 0,
+        sale_price: product.sale_price ?? 0,
+        discount: product.discount ?? 0,
+        category: product.category ?? "",
+        subcategory: product.subcategory ?? "",
+        subcategory_item: product.subcategory_item ?? "",
+        description: product.description ?? "",
+        stock: totalStock,
+        brand: product.brand ?? "No Brand",
+        weight: product.weight ?? 1,
+        images: (product.images || []).join(";"),
+        thumbnail: product.thumbnail,
+      };
+    });
+
+    const productSheet = XLSX.utils.json_to_sheet(productRows);
+
+    productSheet["!cols"] = Object.keys(productRows[0] || {}).map((key) => ({
       wch: Math.max(key.length, 20),
     }));
 
-    XLSX.utils.book_append_sheet(wb, sheet, "Coverage Areas");
-    XLSX.writeFile(wb, "Coverage_Areas.xlsx");
-    return;
-  }
+    XLSX.utils.book_append_sheet(wb, productSheet, "Products");
 
-  // =========================
-  // PAYMENTS EXPORT
-  // =========================
-  if (active === "Payments") {
-    // Payments file
-    if (payments.length) {
-      const wb1 = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.json_to_sheet(payments);
+    // --- Variants sheet ---
+    const variantRows = [];
+    const allAttributeKeys = new Set();
 
-      ws1["!cols"] = Object.keys(payments[0] || {}).map((key) => ({
-        wch: Math.max(key.length, 20),
-      }));
+    products.forEach((product) => {
+      const parsedVariants = (product.variants || []).map(normalizeVariant);
 
-      XLSX.utils.book_append_sheet(wb1, ws1, "Payments");
-      XLSX.writeFile(wb1, "Payments_export.xlsx");
-    }
+      parsedVariants.forEach((v) => {
+        const row = {
+          productId: product.id,
+          productName: product.product_name,
+          regular_price: v.regular_price,
+          sale_price: v.sale_price,
+          stock: v.stock,
+        };
 
-    // Seller Payments file
-    if (sellerPayments.length) {
-      const wb2 = XLSX.utils.book_new();
-      const ws2 = XLSX.utils.json_to_sheet(sellerPayments);
+        if (v.attributes) {
+          Object.entries(v.attributes).forEach(([key, value]) => {
+            row[key] = value;
+            allAttributeKeys.add(key);
+          });
+        }
 
-      ws2["!cols"] = Object.keys(sellerPayments[0] || {}).map((key) => ({
-        wch: Math.max(key.length, 20),
-      }));
-
-      XLSX.utils.book_append_sheet(wb2, ws2, "SellerPayments");
-      XLSX.writeFile(wb2, "SellerPayments_export.xlsx");
-    }
-
-    return;
-  }
-
-  // =========================
-  // PRODUCTS EXPORT
-  // =========================
-  if (active !== "Products") return;
-
-  const wb = XLSX.utils.book_new();
-
-  // --- normalize variant ---
-  const normalizeVariant = (v) => {
-    if (v.attributes) return v;
-    const { id, tempId, regular_price, sale_price, stock, ...rest } = v;
-    return {
-      id,
-      tempId,
-      attributes: rest,
-      regular_price: regular_price || 0,
-      sale_price: sale_price || 0,
-      stock: stock || 0,
-    };
-  };
-
-  // --- Products sheet ---
-  const productRows = products.map((product) => {
-    const parsedVariants = (product.variants || []).map(normalizeVariant);
-    const totalStock = parsedVariants.length
-      ? parsedVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
-      : product.stock || 0;
-
-    return {
-      id: product.id,
-      productName: product.product_name,
-      regular_price: product.regular_price ?? 0,
-      sale_price: product.sale_price ?? 0,
-      discount: product.discount ?? 0,
-      category: product.category ?? "",
-      subcategory: product.subcategory ?? "",
-      subcategory_item: product.subcategory_item ?? "",
-      description: product.description ?? "",
-      stock: totalStock,
-      brand: product.brand ?? "No Brand",
-      weight: product.weight ?? 1,
-      images: (product.images || []).join(";"),
-      thumbnail: product.thumbnail,
-    };
-  });
-
-  const productSheet = XLSX.utils.json_to_sheet(productRows);
-
-  productSheet["!cols"] = Object.keys(productRows[0] || {}).map((key) => ({
-    wch: Math.max(key.length, 20),
-  }));
-
-  XLSX.utils.book_append_sheet(wb, productSheet, "Products");
-
-  // --- Variants sheet ---
-  const variantRows = [];
-  const allAttributeKeys = new Set();
-
-  products.forEach((product) => {
-    const parsedVariants = (product.variants || []).map(normalizeVariant);
-
-    parsedVariants.forEach((v) => {
-      const row = {
-        productId: product.id,
-        productName: product.product_name,
-        regular_price: v.regular_price,
-        sale_price: v.sale_price,
-        stock: v.stock,
-      };
-
-      if (v.attributes) {
-        Object.entries(v.attributes).forEach(([key, value]) => {
-          row[key] = value;
-          allAttributeKeys.add(key);
-        });
-      }
-
-      variantRows.push(row);
-    });
-  });
-
-  if (variantRows.length) {
-    const columns = [
-      "productId",
-      "productName",
-      "regular_price",
-      "sale_price",
-      "stock",
-      ...Array.from(allAttributeKeys),
-    ];
-
-    variantRows.forEach((row) => {
-      columns.forEach((col) => {
-        if (!(col in row)) row[col] = "";
+        variantRows.push(row);
       });
     });
 
-    const variantSheet = XLSX.utils.json_to_sheet(variantRows, {
-      header: columns,
-    });
+    if (variantRows.length) {
+      const columns = [
+        "productId",
+        "productName",
+        "regular_price",
+        "sale_price",
+        "stock",
+        ...Array.from(allAttributeKeys),
+      ];
 
-    variantSheet["!cols"] = columns.map((key) => ({
-      wch: Math.max(key.length, 20),
-    }));
+      variantRows.forEach((row) => {
+        columns.forEach((col) => {
+          if (!(col in row)) row[col] = "";
+        });
+      });
 
-    XLSX.utils.book_append_sheet(wb, variantSheet, "Variants");
-  }
+      const variantSheet = XLSX.utils.json_to_sheet(variantRows, {
+        header: columns,
+      });
 
-  XLSX.writeFile(wb, "Products_export.xlsx");
-};
+      variantSheet["!cols"] = columns.map((key) => ({
+        wch: Math.max(key.length, 20),
+      }));
+
+      XLSX.utils.book_append_sheet(wb, variantSheet, "Variants");
+    }
+
+    XLSX.writeFile(wb, "Products_export.xlsx");
+  };
 
   const selectAll = () => {
     if (active === "Products" || active === "FlashSale") {
@@ -561,9 +561,8 @@ export default function AdminPanelDashboard() {
         division: item.division,
         district: item.district,
         thana: item.thana,
-       area_type: item.area_type,
+        area_type: item.area_type,
       }));
-     
 
       // Send to backend
       const res = await axiosPublic.post("/postal-zones/bulk", postalZones);
@@ -814,6 +813,7 @@ export default function AdminPanelDashboard() {
       data = data.filter(
         (p) =>
           (p.id || "").toLowerCase().includes(q) ||
+          (p.order_id || "").toLowerCase().includes(q) ||
           (p.method || "").toLowerCase().includes(q) ||
           (p.status || "").toLowerCase().includes(q),
       );
