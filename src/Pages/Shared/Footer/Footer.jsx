@@ -22,7 +22,7 @@ export default function Footer() {
             </p>
             <div className="flex space-x-4">
               <a
-                href="https://www.facebook.com/share/16BK5Q6WY5/"
+                href="https://www.facebook.com/share/18m3opFc5K/"
                 aria-label="Follow us on Facebook"
                 className="text-gray-400 hover:text-white transition-colors"
               >
@@ -36,7 +36,7 @@ export default function Footer() {
                 <FaYoutube size={24} />
               </a>
               <a
-                href="https://www.instagram.com/bazarigo.store/?utm_source=ig_web_button_share_sheet"
+                href="https://www.instagram.com/bazarigoonlinebd?igsh=MnVrZHB6dWd3dWlu"
                 aria-label="Follow us on Instagram"
                 className="text-gray-400 hover:text-white transition-colors"
               >
